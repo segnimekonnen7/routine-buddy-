@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habit Loop</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        h1 { color: #2563eb; text-align: center; }
+        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #059669; color: white; }
+        .habit-card { background: #f8fafc; padding: 20px; margin: 10px 0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Habit Loop - Habit Tracker</h1>
+        <button class="btn btn-primary" onclick="loadHabits()">Load Habits</button>
+        <button class="btn btn-primary" onclick="createHabit()">Create Habit</button>
+        <div id="habits"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://routine-h9ig.onrender.com';
+        
+        async function loadHabits() {
+            try {
+                const response = await axios.get(API_BASE + '/habits');
+                const habits = response.data;
+                displayHabits(habits);
+            } catch (err) {
+                document.getElementById('habits').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
+            }
+        }
+        
+        function displayHabits(habits) {
+            const container = document.getElementById('habits');
+            container.innerHTML = habits.map(habit => `
+                <div class="habit-card">
+                    <h3>${habit.title}</h3>
+                    <p>Streak: ${habit.current_streak_length} days</p>
+                    <p>Due today: ${habit.is_due_today ? 'Yes' : 'No'}</p>
+                    <button class="btn btn-success" onclick="checkIn('${habit.id}')">Check In</button>
+                </div>
+            `).join('');
+        }
+        
+        async function checkIn(habitId) {
+            try {
+                await axios.post(API_BASE + '/habits/' + habitId + '/checkin', {
+                    ts: new Date().toISOString()
+                });
+                loadHabits();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+        
+        async function createHabit() {
+            const title = prompt('Enter habit title:');
+            if (title) {
+                try {
+                    await axios.post(API_BASE + '/habits', {
+                        title: title,
+                        goal_type: 'check',
+                        grace_per_week: 1,
+                        timezone: 'UTC'
+                    });
+                    loadHabits();
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            }
+        }
+        
+        // Load habits on page load
+        loadHabits();
+    </script>
+</body>
+</html>
