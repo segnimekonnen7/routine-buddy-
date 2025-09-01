@@ -10,3 +10,5 @@ services:
         value: /opt/render/project/src
       - key: DATABASE_URL
         value: sqlite:///./habitloop.db
+      - key: ALLOWED_ORIGINS
+        value: "http://localhost:3000,https://segnimekonnen7.github.io"
