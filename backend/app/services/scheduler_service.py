@@ -3,7 +3,6 @@
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
 
@@ -24,7 +23,6 @@ class SmartReminderService:
         """
         Analyze when user typically completes habits to suggest best reminder time.
         
-        Uses pandas/numpy for data analysis to find patterns in completion times.
         Returns optimal reminder hour based on historical completion data.
         """
         try:
@@ -39,7 +37,6 @@ class SmartReminderService:
                 logger.info(f"Not enough completion data for habit {habit_id} (need at least 3, got {len(completions)})")
                 return None
             
-            # Convert to pandas DataFrame for analysis
             completion_data = []
             for completion in completions:
                 completion_data.append({

@@ -65,7 +65,6 @@ async def get_optimal_reminder_time(
     Get optimal reminder time based on completion patterns using ML analysis.
     
     Analyzes user's historical completion data to suggest best reminder time.
-    Uses pandas/numpy for statistical analysis of completion patterns.
     """
     try:
         # Verify habit belongs to user

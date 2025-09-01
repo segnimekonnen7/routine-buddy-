@@ -3,7 +3,6 @@
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
 
@@ -37,7 +36,6 @@ class PredictionService:
             return 0
         
         try:
-            # Convert to pandas for easier analysis
             completion_dates = [c.completed_at.date() for c in completions]
             df = pd.DataFrame({'date': completion_dates})
             df = df.drop_duplicates().sort_values('date', ascending=False)
