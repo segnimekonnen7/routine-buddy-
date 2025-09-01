@@ -17,7 +17,7 @@ export default function NewHabit() {
   const [schedule, setSchedule] = useState({
     type: 'daily',
     days: [1, 2, 3, 4, 5, 6, 7],
-    times: ['morning']
+    times: ['morning'], count: 3
   })
   const [loading, setLoading] = useState(false)
   const router = useRouter()

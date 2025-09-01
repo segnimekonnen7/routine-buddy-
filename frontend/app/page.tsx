@@ -37,7 +37,7 @@ export default function Dashboard() {
       setHabits(response.data)
     } catch (err) {
       console.error('Error fetching habits:', err)
-      setError(`Failed to load habits: ${err.message}`)
+      setError(`Failed to load habits: ${err}`)
     } finally {
       setLoading(false)
     }
