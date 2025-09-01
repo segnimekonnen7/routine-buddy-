@@ -27,7 +27,7 @@ export default function NewHabit() {
     setLoading(true)
 
     try {
-      await axios.post('http://localhost:8000/habits', {
+      await axios.post('https://routine-h9ig.onrender.com/habits', {
         ...formData,
         target_value: formData.target_value ? parseFloat(formData.target_value) : null,
         schedule_json: schedule

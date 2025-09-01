@@ -31,8 +31,8 @@ export default function Dashboard() {
 
   const fetchHabits = async () => {
     try {
-      console.log('Fetching habits from:', 'http://localhost:8000/habits')
-      const response = await axios.get('http://localhost:8000/habits')
+      console.log('Fetching habits from:', 'https://routine-h9ig.onrender.com/habits')
+      const response = await axios.get('https://routine-h9ig.onrender.com/habits')
       console.log('API Response:', response.data)
       setHabits(response.data)
     } catch (err) {
@@ -45,7 +45,7 @@ export default function Dashboard() {
 
   const handleCheckin = async (habitId: string) => {
     try {
-      await axios.post(`http://localhost:8000/habits/${habitId}/checkin`, {
+      await axios.post(`https://routine-h9ig.onrender.com/habits/${habitId}/checkin`, {
         ts: new Date().toISOString()
       })
       fetchHabits() // Refresh habits
@@ -56,7 +56,7 @@ export default function Dashboard() {
 
   const handleSnooze = async (habitId: string) => {
     try {
-      await axios.post(`http://localhost:8000/habits/${habitId}/miss`, {
+      await axios.post(`https://routine-h9ig.onrender.com/habits/${habitId}/miss`, {
         ts: new Date().toISOString()
       })
       fetchHabits() // Refresh habits
