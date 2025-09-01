@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: habit-loop-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: DATABASE_URL
+        value: sqlite:///./habitloop.db

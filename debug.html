@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habit Loop Debug</title>
+</head>
+<body>
+    <h1>Habit Loop API Debug</h1>
+    <div id="status">Testing...</div>
+    <div id="habits"></div>
+    
+    <script>
+        async function testAPI() {
+            const statusDiv = document.getElementById('status');
+            const habitsDiv = document.getElementById('habits');
+            
+            try {
+                statusDiv.innerHTML = 'Testing API connection...';
+                
+                // Test health endpoint
+                const healthResponse = await fetch('http://localhost:8001/health');
+                const healthData = await healthResponse.json();
+                statusDiv.innerHTML = `✅ Health: ${healthData.status}`;
+                
+                // Test habits endpoint
+                const habitsResponse = await fetch('http://localhost:8001/habits');
+                const habitsData = await habitsResponse.json();
+                
+                habitsDiv.innerHTML = `
+                    <h2>Habits (${habitsData.length} found):</h2>
+                    <ul>
+                        ${habitsData.map(habit => `
+                            <li>
+                                <strong>${habit.title}</strong> - 
+                                Streak: ${habit.current_streak_length} days - 
+                                Due today: ${habit.is_due_today ? 'Yes' : 'No'}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                console.error('API Error:', error);
+            }
+        }
+        
+        // Run test when page loads
+        testAPI();
+    </script>
+</body>
+</html>
