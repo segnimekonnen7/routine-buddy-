@@ -29,3 +29,4 @@ sendgrid==6.10.0
 # Development and testing
 pytest==7.4.3
 pytest-asyncio==0.21.1
+# Updated for Python 3.13 compatibility
