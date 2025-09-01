@@ -7,7 +7,6 @@ sqlalchemy==2.0.23
 alembic==1.12.1
 
 # Data processing and ML
-numpy==1.25.2
 
 # HTTP requests and validation
 httpx==0.25.2

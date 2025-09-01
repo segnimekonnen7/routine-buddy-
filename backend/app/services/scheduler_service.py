@@ -3,7 +3,6 @@
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
-import numpy as np
 from sqlalchemy.orm import Session
 
 from app.models.habit import Habit
