@@ -31,10 +31,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Add CORS middleware with explicit origins for GitHub Pages
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
+    allow_origins=["*"],  # Allow all origins for now to fix the issue
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -119,7 +119,7 @@ async def create_habit(habit: HabitCreate):
         "target_value": habit.target_value,
         "grace_per_week": habit.grace_per_week,
         "timezone": habit.timezone,
-        "created_at": datetime.utcnow().isoformat() + "Z",
+        "created_at": datetime.now().isoformat() + "Z",
         "current_streak_length": 0,
         "is_due_today": True,  # New habits are due today
         "best_hour": None
