@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     postgres_url: str = "sqlite:///./habitloop.db"
     
     # CORS
-    allowed_origins: List[str] = ["http://localhost:3000"]
+    allowed_origins: List[str] = ["http://localhost:3000", "https://segnimekonnen7.github.io"]
     
     # Email
     sendgrid_api_key: Optional[str] = None
