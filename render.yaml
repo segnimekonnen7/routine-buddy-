@@ -6,8 +6,6 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn simple_backend:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: PYTHONPATH
-        value: /opt/render/project/src
       - key: DATABASE_URL
         value: sqlite:///./habitloop.db
       - key: ALLOWED_ORIGINS

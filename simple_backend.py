@@ -281,4 +281,5 @@ if __name__ == "__main__":
     print("🚀 Starting Simplified Habit Loop API...")
     print("📡 CORS: Allowing all origins for GitHub Pages compatibility")
     print("🔍 API Documentation: http://localhost:8000/docs")
+    print("🚀 DEPLOYMENT VERSION: 2.0 - CORS Fixed for GitHub Pages")
     uvicorn.run(app, host="0.0.0.0", port=8000)
