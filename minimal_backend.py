@@ -239,3 +239,4 @@ if __name__ == "__main__":
     print("📡 CORS: Allowing all origins for GitHub Pages")
     print("🔍 API Documentation: http://localhost:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000)
+# Force redeploy Tue Sep  2 18:59:09 CDT 2025
