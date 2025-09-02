@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     # Database - Use SQLite for local development
     postgres_url: str = "sqlite:///./habitloop.db"
     
-    # CORS
-    allowed_origins: List[str] = ["http://localhost:3000", "https://segnimekonnen7.github.io"]
+    # CORS - Updated for GitHub Pages deployment with environment variable support
+    allowed_origins: List[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://segnimekonnen7.github.io").split(",")
     
     # Email
     sendgrid_api_key: Optional[str] = None
