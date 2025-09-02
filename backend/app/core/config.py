@@ -13,7 +13,12 @@ class Settings(BaseSettings):
     postgres_url: str = "sqlite:///./habitloop.db"
     
     # CORS - Updated for GitHub Pages deployment with environment variable support
-    allowed_origins: List[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://segnimekonnen7.github.io").split(",")
+    cors_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,https://segnimekonnen7.github.io")
+    allowed_origins: List[str] = [origin.strip() for origin in cors_env.split(",")]
+    
+    # Debug logging
+    print(f"DEBUG: CORS origins loaded: {allowed_origins}")
+    print(f"DEBUG: Environment variable ALLOWED_ORIGINS: {cors_env}")
     
     # Email
     sendgrid_api_key: Optional[str] = None
