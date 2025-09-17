@@ -1,4 +1,4 @@
-name: Deploy to Render
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -7,41 +7,34 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        python-version: '3.11'
-    
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Run tests
+        cd frontend
+        npm ci
+        
+    - name: Build frontend
       run: |
-        cd backend
-        export PYTHONPATH=.
-        python -m pytest -v || echo "No tests found, skipping..."
-    
-    - name: Test API startup
-      run: |
-        cd backend
-        export PYTHONPATH=.
-        timeout 10s python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 || echo "API startup test completed"
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Deploy to Render
-      run: |
-        echo "🚀 Deployment triggered for commit ${{ github.sha }}"
-        echo "✅ Your app will be automatically deployed to Render!"
+        cd frontend
+        npm run build
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./frontend/out
+        cname: segnimekonnen7.github.io

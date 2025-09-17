@@ -1,81 +1,268 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Habit Loop</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Loop - Science-Backed Habit Builder</title>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-        h1 { color: #2563eb; text-align: center; }
-        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-success { background: #059669; color: white; }
-        .habit-card { background: #f8fafc; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .btn {
+            @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white hover:bg-blue-700;
+        }
+        .btn-success {
+            @apply bg-green-600 text-white hover:bg-green-700;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 text-white hover:bg-gray-700;
+        }
+        .card {
+            @apply bg-white p-6 rounded-lg shadow-md border border-gray-200;
+        }
+        .loading {
+            @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+        }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>🚀 Habit Loop - Habit Tracker</h1>
-        <button class="btn btn-primary" onclick="loadHabits()">Load Habits</button>
-        <button class="btn btn-primary" onclick="createHabit()">Create Habit</button>
-        <div id="habits"></div>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">🚀 Habit Loop</h1>
+            <p class="text-gray-600">Science-backed habit builder with adaptive reminders</p>
+        </header>
+
+        <!-- Controls -->
+        <div class="flex justify-center gap-4 mb-8">
+            <button class="btn btn-primary" onclick="loadHabits()">Load Habits</button>
+            <button class="btn btn-primary" onclick="showCreateForm()">Create New Habit</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center py-12">
+            <div class="loading mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading your habits...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden text-center py-12">
+            <div class="card max-w-md mx-auto">
+                <p class="text-red-600 mb-4" id="error-message">Failed to load habits</p>
+                <button class="btn btn-primary" onclick="loadHabits()">Try Again</button>
+            </div>
+        </div>
+
+        <!-- Habits Container -->
+        <div id="habits-container" class="hidden">
+            <!-- Today's Overview -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Today's Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-blue-600" id="total-habits">0</div>
+                        <div class="text-gray-600">Total Habits</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-yellow-600" id="due-today">0</div>
+                        <div class="text-gray-600">Due Today</div>
+                    </div>
+                    <div class="card text-center">
+                        <div class="text-3xl font-bold text-green-600" id="completed-today">0</div>
+                        <div class="text-gray-600">Completed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Habits List -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="habits-list">
+                <!-- Habits will be populated here -->
+            </div>
+        </div>
+
+        <!-- Create Habit Modal -->
+        <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="card max-w-md w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">Create New Habit</h3>
+                <form id="create-form">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Habit Title</label>
+                        <input type="text" id="habit-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Drink Water" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                        <textarea id="habit-notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Add some notes about this habit..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Goal Type</label>
+                        <select id="habit-goal-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="check">Check (Yes/No)</option>
+                            <option value="count">Count (Number)</option>
+                            <option value="duration">Duration (Minutes)</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-1">Create Habit</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideCreateForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_BASE = 'https://routine-h9ig.onrender.com';
-        
+        let habits = [];
+
+        // Load habits on page load
+        document.addEventListener('DOMContentLoaded', loadHabits);
+
         async function loadHabits() {
+            showLoading();
+            hideError();
+            hideHabits();
+
             try {
+                console.log('Fetching habits from:', API_BASE + '/habits');
                 const response = await axios.get(API_BASE + '/habits');
-                const habits = response.data;
+                console.log('API Response:', response.data);
+                
+                habits = response.data;
                 displayHabits(habits);
+                showHabits();
             } catch (err) {
-                document.getElementById('habits').innerHTML = '<p style="color: red;">Error: ' + err.message + '</p>';
+                console.error('Error fetching habits:', err);
+                showError(`Failed to load habits: ${err.message}`);
+            } finally {
+                hideLoading();
             }
         }
-        
+
         function displayHabits(habits) {
-            const container = document.getElementById('habits');
+            const container = document.getElementById('habits-list');
+            const todayHabits = habits.filter(habit => habit.is_due_today);
+            
+            // Update overview stats
+            document.getElementById('total-habits').textContent = habits.length;
+            document.getElementById('due-today').textContent = todayHabits.length;
+            document.getElementById('completed-today').textContent = todayHabits.filter(h => h.current_streak_length > 0).length;
+
+            // Display habits
             container.innerHTML = habits.map(habit => `
-                <div class="habit-card">
-                    <h3>${habit.title}</h3>
-                    <p>Streak: ${habit.current_streak_length} days</p>
-                    <p>Due today: ${habit.is_due_today ? 'Yes' : 'No'}</p>
-                    <button class="btn btn-success" onclick="checkIn('${habit.id}')">Check In</button>
+                <div class="card">
+                    <h3 class="font-semibold text-gray-900 mb-2">${habit.title}</h3>
+                    ${habit.notes ? `<p class="text-sm text-gray-600 mb-2">${habit.notes}</p>` : ''}
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Streak:</span>
+                            <span class="font-medium">${habit.current_streak_length} days</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Type:</span>
+                            <span class="font-medium capitalize">${habit.goal_type}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Due Today:</span>
+                            <span class="font-medium ${habit.is_due_today ? 'text-green-600' : 'text-gray-500'}">${habit.is_due_today ? 'Yes' : 'No'}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${habit.is_due_today ? `
+                            <button class="btn btn-success flex-1" onclick="checkIn('${habit.id}')">Check In</button>
+                            <button class="btn btn-secondary" onclick="snoozeHabit('${habit.id}')">Snooze</button>
+                        ` : `
+                            <div class="text-center text-gray-500 text-sm py-2">Not due today</div>
+                        `}
+                    </div>
                 </div>
             `).join('');
         }
-        
+
         async function checkIn(habitId) {
             try {
                 await axios.post(API_BASE + '/habits/' + habitId + '/checkin', {
                     ts: new Date().toISOString()
                 });
-                loadHabits();
+                loadHabits(); // Refresh habits
             } catch (err) {
+                console.error('Error checking in:', err);
                 alert('Error: ' + err.message);
             }
         }
-        
-        async function createHabit() {
-            const title = prompt('Enter habit title:');
-            if (title) {
-                try {
-                    await axios.post(API_BASE + '/habits', {
-                        title: title,
-                        goal_type: 'check',
-                        grace_per_week: 1,
-                        timezone: 'UTC'
-                    });
-                    loadHabits();
-                } catch (err) {
-                    alert('Error: ' + err.message);
-                }
+
+        async function snoozeHabit(habitId) {
+            try {
+                await axios.post(API_BASE + '/habits/' + habitId + '/miss', {
+                    ts: new Date().toISOString()
+                });
+                loadHabits(); // Refresh habits
+            } catch (err) {
+                console.error('Error snoozing:', err);
+                alert('Error: ' + err.message);
             }
         }
-        
-        // Load habits on page load
-        loadHabits();
+
+        function showCreateForm() {
+            document.getElementById('create-modal').classList.remove('hidden');
+        }
+
+        function hideCreateForm() {
+            document.getElementById('create-modal').classList.add('hidden');
+            document.getElementById('create-form').reset();
+        }
+
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('habit-title').value;
+            const notes = document.getElementById('habit-notes').value;
+            const goalType = document.getElementById('habit-goal-type').value;
+
+            try {
+                await axios.post(API_BASE + '/habits', {
+                    title: title,
+                    notes: notes || null,
+                    goal_type: goalType,
+                    target_value: 1,
+                    grace_per_week: 1,
+                    timezone: 'UTC'
+                });
+                
+                hideCreateForm();
+                loadHabits(); // Refresh habits
+            } catch (err) {
+                console.error('Error creating habit:', err);
+                alert('Error: ' + err.message);
+            }
+        });
+
+        // UI State Management
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function showHabits() {
+            document.getElementById('habits-container').classList.remove('hidden');
+        }
+
+        function hideHabits() {
+            document.getElementById('habits-container').classList.add('hidden');
+        }
     </script>
 </body>
 </html>
