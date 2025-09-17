@@ -6,24 +6,6 @@
     <title>Habit Loop - Science-Backed Habit Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .btn {
-            @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
-        }
-        .btn-primary {
-            @apply bg-blue-600 text-white hover:bg-blue-700;
-        }
-        .btn-success {
-            @apply bg-green-600 text-white hover:bg-green-700;
-        }
-        .btn-secondary {
-            @apply bg-gray-600 text-white hover:bg-gray-700;
-        }
-        .btn-danger {
-            @apply bg-red-600 text-white hover:bg-red-700;
-        }
-        .card {
-            @apply bg-white p-6 rounded-lg shadow-md border border-gray-200;
-        }
         .loading {
             @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
         }
@@ -35,6 +17,12 @@
         }
         .habit-missed {
             @apply bg-red-50 border-red-200;
+        }
+        .snackbar {
+            @apply fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 bg-gray-800 text-white;
+        }
+        .focus-trap:focus {
+            @apply outline-none ring-2 ring-blue-500;
         }
     </style>
 </head>
@@ -48,32 +36,49 @@
 
         <!-- Controls -->
         <div class="flex justify-center gap-4 mb-8">
-            <button class="btn btn-primary" onclick="loadHabits()">Refresh Habits</button>
-            <button class="btn btn-primary" onclick="showCreateForm()">Create New Habit</button>
-            <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
-            <button class="btn btn-secondary" onclick="importData()">Import Data</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-blue-600 text-white hover:bg-blue-700" onclick="loadHabits()">Refresh Habits</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-blue-600 text-white hover:bg-blue-700" onclick="showCreateForm()">Create New Habit</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-gray-600 text-white hover:bg-gray-700" onclick="exportData()">Export Data</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-gray-600 text-white hover:bg-gray-700" onclick="importData()">Import Data</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-gray-800 text-white hover:bg-gray-900" onclick="openSettings()">Settings</button>
         </div>
 
         <!-- Stats Overview -->
         <div class="mb-8">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Today's Overview</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div class="card text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
                     <div class="text-3xl font-bold text-blue-600" id="total-habits">0</div>
                     <div class="text-gray-600">Total Habits</div>
                 </div>
-                <div class="card text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
                     <div class="text-3xl font-bold text-yellow-600" id="due-today">0</div>
                     <div class="text-gray-600">Due Today</div>
                 </div>
-                <div class="card text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
                     <div class="text-3xl font-bold text-green-600" id="completed-today">0</div>
                     <div class="text-gray-600">Completed</div>
                 </div>
-                <div class="card text-center">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center">
                     <div class="text-3xl font-bold text-purple-600" id="total-streak">0</div>
                     <div class="text-gray-600">Total Streak Days</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Sort & Filter Controls -->
+        <div class="mb-6 flex flex-wrap gap-4 items-center justify-center">
+            <div class="flex items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Sort by:</label>
+                <select id="sort-select" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateSortAndFilter()">
+                    <option value="due">Due Today</option>
+                    <option value="streak">Streak</option>
+                    <option value="title">Title</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="hide-completed" class="h-4 w-4" onchange="updateSortAndFilter()">
+                <label for="hide-completed" class="text-sm font-medium text-gray-700">Hide completed today</label>
             </div>
         </div>
 
@@ -87,12 +92,94 @@
             <div class="text-6xl mb-4">🎯</div>
             <h3 class="text-xl font-semibold text-gray-900 mb-2">No habits yet</h3>
             <p class="text-gray-600 mb-6">Start building better habits today!</p>
-            <button class="btn btn-primary" onclick="showCreateForm()">Create Your First Habit</button>
+            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-blue-600 text-white hover:bg-blue-700" onclick="showCreateForm()">Create Your First Habit</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 max-w-lg w-full mx-4">
+                <h3 id="settings-title" class="text-xl font-bold mb-4">Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Theme</span>
+                        <select id="set-theme" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="system">System</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Week starts on</span>
+                        <select id="set-week" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                        </select>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Timezone mode</span>
+                        <select id="set-tz" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="utc">UTC (stable)</option>
+                            <option value="local">Local</option>
+                        </select>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Default goal type</span>
+                        <select id="set-default-goal" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="check">Check</option>
+                            <option value="count">Count</option>
+                            <option value="duration">Duration</option>
+                        </select>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Default target</span>
+                        <input id="set-default-target" type="number" min="1" class="w-full px-3 py-2 border rounded-lg" />
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Default reminder hour</span>
+                        <input id="set-default-hour" type="number" min="0" max="23" class="w-full px-3 py-2 border rounded-lg" />
+                    </label>
+                    <label class="text-sm flex items-center gap-2">
+                        <input id="set-notifs" type="checkbox" class="h-4 w-4">
+                        <span>Enable notifications</span>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Quiet hours (start–end)</span>
+                        <div class="flex gap-2">
+                            <input id="set-quiet-start" type="number" min="0" max="23" class="w-full px-3 py-2 border rounded-lg">
+                            <input id="set-quiet-end" type="number" min="0" max="23" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </label>
+                    <label class="text-sm flex items-center gap-2">
+                        <input id="set-confirm" type="checkbox" class="h-4 w-4">
+                        <span>Confirm destructive actions</span>
+                    </label>
+                    <label class="text-sm flex items-center gap-2">
+                        <input id="set-autobackup" type="checkbox" class="h-4 w-4">
+                        <span>Auto-backup before import</span>
+                    </label>
+                    <label class="text-sm">
+                        <span class="block text-gray-700 mb-1">Sort by</span>
+                        <select id="set-sort" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="due">Due</option>
+                            <option value="streak">Streak</option>
+                            <option value="title">Title</option>
+                        </select>
+                    </label>
+                    <label class="text-sm flex items-center gap-2">
+                        <input id="set-hide-completed" type="checkbox" class="h-4 w-4">
+                        <span>Hide completed today</span>
+                    </label>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700" onclick="saveSettingsFromUI()">Save</button>
+                    <button class="px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700" onclick="closeSettings()">Close</button>
+                </div>
+            </div>
         </div>
 
         <!-- Create Habit Modal -->
-        <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="card max-w-md w-full mx-4">
+        <div id="create-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="create-title">
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 max-w-md w-full mx-4">
                 <h3 class="text-xl font-bold mb-4">Create New Habit</h3>
                 <form id="create-form">
                     <div class="mb-4">
@@ -120,33 +207,111 @@
                         <input type="number" id="habit-grace" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value="1" min="0" max="7">
                     </div>
                     <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-1">Create Habit</button>
-                        <button type="button" class="btn btn-secondary" onclick="hideCreateForm()">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-blue-600 text-white hover:bg-blue-700 flex-1">Create Habit</button>
+                        <button type="button" class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-gray-600 text-white hover:bg-gray-700" onclick="hideCreateForm()">Cancel</button>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- Import Modal -->
-        <div id="import-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="card max-w-md w-full mx-4">
-                <h3 class="text-xl font-bold mb-4">Import Habits Data</h3>
+        <div id="import-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="import-title">
+            <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 max-w-md w-full mx-4">
+                <h3 id="import-title" class="text-xl font-bold mb-4">Import Habits Data</h3>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Select JSON file</label>
                     <input type="file" id="import-file" accept=".json" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="flex gap-2">
-                    <button class="btn btn-primary flex-1" onclick="processImport()">Import</button>
-                    <button class="btn btn-secondary" onclick="hideImportModal()">Cancel</button>
+                    <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-blue-600 text-white hover:bg-blue-700 flex-1" onclick="processImport()">Import</button>
+                    <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-gray-600 text-white hover:bg-gray-700" onclick="hideImportModal()">Cancel</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Undo Snackbar -->
+        <div id="undo-snackbar" class="hidden snackbar">
+            <div class="flex items-center gap-2">
+                <span id="undo-message">Action completed</span>
+                <button id="undo-button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Undo</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Local storage key
+        // Local storage keys
         const STORAGE_KEY = 'habit-loop-data';
+        const SETTINGS_KEY = 'habit-loop-settings';
         
+        // Settings management
+        function loadSettings(){
+            const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
+            return s ?? {
+                theme: 'system',
+                weekStartsOn: 0,
+                timezoneMode: 'utc',
+                defaultGoalType: 'check',
+                defaultTargetValue: 1,
+                defaultReminderHour: null,
+                notificationsEnabled: false,
+                quietHours: { start: 22, end: 7 },
+                confirmDestructive: true,
+                autoBackupOnImport: true,
+                sortBy: 'due',
+                hideCompletedToday: false
+            };
+        }
+        let settings = loadSettings();
+        function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+
+        // Date helpers (UTC-friendly)
+        function toDayKey(d = new Date()){
+            const dt = new Date(d);
+            if (settings.timezoneMode === 'utc') {
+                return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
+            } else {
+                return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+            }
+        }
+        function dayKeyToDate(key){
+            const [y,m,d] = key.split('-').map(Number);
+            return settings.timezoneMode === 'utc'
+                ? new Date(Date.UTC(y, m-1, d))
+                : new Date(y, m-1, d);
+        }
+        function prevDayKey(key){
+            const dt = dayKeyToDate(key); dt.setDate(dt.getDate()-1); return toDayKey(dt);
+        }
+        function isoWeekNumber(date = new Date()){
+            const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+        }
+        function getWeekKey(date = new Date()){
+            const d = settings.timezoneMode === 'utc' ? new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())) : new Date(date);
+            return `${d.getFullYear()}-W${String(isoWeekNumber(d)).padStart(2,'0')}`;
+        }
+        function scheduledToday(habit){
+            const dow = settings.timezoneMode === 'utc' ? new Date().getUTCDay() : new Date().getDay();
+            const days = habit.schedule?.daysOfWeek ?? [0,1,2,3,4,5,6];
+            return days.includes(dow);
+        }
+        function updateStreakOnCheckIn(habit){
+            const today = toDayKey();
+            const comps = habit.completions ?? [];
+            const days = comps.map(ts => toDayKey(new Date(ts)));
+            const last = days[days.length - 1];
+            if (last === today) return; // already counted today
+            const yest = prevDayKey(today);
+            habit.current_streak_length = (last === yest) ? (habit.current_streak_length || 0) + 1 : 1;
+        }
+
+        // Undo system
+        let undoState = null;
+        let undoTimeout = null;
+
         // Initialize with demo data if empty
         let habits = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [
             {
@@ -160,7 +325,11 @@
                 current_streak_length: 5,
                 is_due_today: true,
                 best_hour: 9,
-                completions: []
+                completions: [],
+                daily_progress: 0,
+                schedule: { daysOfWeek: [0,1,2,3,4,5,6] },
+                reminder_hour: 9,
+                icon: '💧'
             },
             {
                 id: 'demo-2',
@@ -173,7 +342,11 @@
                 current_streak_length: 3,
                 is_due_today: false,
                 best_hour: 7,
-                completions: []
+                completions: [],
+                daily_progress: 0,
+                schedule: { daysOfWeek: [0,1,2,3,4,5,6] },
+                reminder_hour: 7,
+                icon: '💪'
             },
             {
                 id: 'demo-3',
@@ -186,13 +359,18 @@
                 current_streak_length: 2,
                 is_due_today: true,
                 best_hour: 21,
-                completions: []
+                completions: [],
+                daily_progress: 0,
+                schedule: { daysOfWeek: [0,1,2,3,4,5,6] },
+                reminder_hour: 21,
+                icon: '📚'
             }
         ];
 
         // Load habits on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadHabits();
+            updateSortAndFilter();
         });
 
         function loadHabits() {
@@ -210,13 +388,10 @@
         }
 
         function updateTodaysStatus() {
-            const today = new Date().toDateString();
+            const today = toDayKey();
             habits.forEach(habit => {
-                const lastCompletion = habit.completions && habit.completions.length > 0 
-                    ? new Date(habit.completions[habit.completions.length - 1]).toDateString()
-                    : null;
-                
-                habit.is_due_today = lastCompletion !== today;
+                const days = (habit.completions ?? []).map(ts => toDayKey(new Date(ts)));
+                habit.is_due_today = scheduledToday(habit) && !days.includes(today);
             });
         }
 
@@ -232,11 +407,32 @@
             
             emptyState.classList.add('hidden');
             
-            container.innerHTML = habits.map(habit => `
-                <div class="card ${habit.is_due_today ? '' : 'habit-completed'}">
+            // Sort habits based on settings
+            let sortedHabits = [...habits];
+            if (settings.sortBy === 'streak') {
+                sortedHabits.sort((a, b) => b.current_streak_length - a.current_streak_length);
+            } else if (settings.sortBy === 'title') {
+                sortedHabits.sort((a, b) => a.title.localeCompare(b.title));
+            } else { // due
+                sortedHabits.sort((a, b) => {
+                    if (a.is_due_today && !b.is_due_today) return -1;
+                    if (!a.is_due_today && b.is_due_today) return 1;
+                    return b.current_streak_length - a.current_streak_length;
+                });
+            }
+            
+            // Filter habits if hide completed is enabled
+            if (settings.hideCompletedToday) {
+                sortedHabits = sortedHabits.filter(habit => habit.is_due_today);
+            }
+            
+            container.innerHTML = sortedHabits.map(habit => `
+                <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200 ${habit.is_due_today ? '' : 'habit-completed'}">
                     <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-semibold text-gray-900">${habit.title}</h3>
-                        <button class="text-red-500 hover:text-red-700" onclick="deleteHabit('${habit.id}')" title="Delete habit">×</button>
+                        <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                            ${habit.icon || '🎯'} ${habit.title}
+                        </h3>
+                        <button class="text-red-500 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded" onclick="deleteHabit('${habit.id}')" title="Delete habit" aria-label="Delete ${habit.title}">×</button>
                     </div>
                     
                     ${habit.notes ? `<p class="text-sm text-gray-600 mb-3">${habit.notes}</p>` : ''}
@@ -256,6 +452,12 @@
                             <span class="text-gray-600">Target:</span>
                             <span class="font-medium">${habit.target_value} ${getTargetUnit(habit.goal_type)}</span>
                         </div>
+                        ${(habit.goal_type === 'count' || habit.goal_type === 'duration') && habit.is_due_today ? `
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Progress:</span>
+                                <span class="font-medium">${habit.daily_progress || 0} / ${habit.target_value}</span>
+                            </div>
+                        ` : ''}
                         <div class="flex justify-between text-sm">
                             <span class="text-gray-600">Due Today:</span>
                             <span class="font-medium ${habit.is_due_today ? 'text-yellow-600' : 'text-green-600'}">
@@ -266,8 +468,21 @@
                     
                     <div class="flex gap-2">
                         ${habit.is_due_today ? `
-                            <button class="btn btn-success flex-1" onclick="checkIn('${habit.id}')">Check In</button>
-                            <button class="btn btn-danger" onclick="missHabit('${habit.id}')">Miss</button>
+                            ${(habit.goal_type === 'count' || habit.goal_type === 'duration') ? `
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-center gap-2 mb-2">
+                                        <button class="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500" onclick="adjustProgress('${habit.id}', -1)">-</button>
+                                        <span class="text-sm font-medium">${habit.daily_progress || 0} / ${habit.target_value}</span>
+                                        <button class="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500" onclick="adjustProgress('${habit.id}', 1)">+</button>
+                                    </div>
+                                    ${(habit.daily_progress || 0) >= habit.target_value ? `
+                                        <button class="w-full px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-green-600 text-white hover:bg-green-700" onclick="checkIn('${habit.id}')">Complete!</button>
+                                    ` : ''}
+                                </div>
+                            ` : `
+                                <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-green-600 text-white hover:bg-green-700 flex-1" onclick="checkIn('${habit.id}')">Check In</button>
+                            `}
+                            <button class="px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer bg-red-600 text-white hover:bg-red-700" onclick="missHabit('${habit.id}')">Miss</button>
                         ` : `
                             <div class="text-center text-green-600 text-sm py-2 flex-1">✅ Completed Today</div>
                         `}
@@ -275,7 +490,7 @@
                 </div>
             `).join('');
         }
-
+        
         function getTargetUnit(goalType) {
             switch(goalType) {
                 case 'count': return 'times';
@@ -295,21 +510,48 @@
             document.getElementById('total-streak').textContent = totalStreak;
         }
 
+        function adjustProgress(habitId, delta) {
+            const habit = habits.find(h => h.id === habitId);
+            if (!habit) return;
+            
+            // Save state for undo
+            saveUndoState();
+            
+            habit.daily_progress = Math.max(0, Math.min(habit.target_value, (habit.daily_progress || 0) + delta));
+            
+            // Auto-complete if target reached
+            if (habit.daily_progress >= habit.target_value) {
+                checkIn(habitId);
+            } else {
+                loadHabits();
+            }
+        }
+
         function checkIn(habitId) {
             const habit = habits.find(h => h.id === habitId);
             if (!habit) return;
             
-            // Add completion timestamp
-            if (!habit.completions) habit.completions = [];
-            habit.completions.push(new Date().toISOString());
+            // Save state for undo
+            saveUndoState();
             
-            // Update streak
-            habit.current_streak_length += 1;
-            habit.is_due_today = false;
+            if (habit.goal_type === 'check') {
+                // For check type, complete immediately
+                if (!habit.completions) habit.completions = [];
+                habit.completions.push(new Date().toISOString());
+                updateStreakOnCheckIn(habit);
+                habit.is_due_today = false;
+            } else if (habit.goal_type === 'count' || habit.goal_type === 'duration') {
+                // For count/duration, only complete if target reached
+                if ((habit.daily_progress || 0) >= habit.target_value) {
+                    if (!habit.completions) habit.completions = [];
+                    habit.completions.push(new Date().toISOString());
+                    updateStreakOnCheckIn(habit);
+                    habit.is_due_today = false;
+                    habit.daily_progress = 0; // Reset for next day
+                }
+            }
             
-            // Show success message
             showNotification('Great job! Habit completed! 🎉', 'success');
-            
             loadHabits();
         }
 
@@ -317,25 +559,150 @@
             const habit = habits.find(h => h.id === habitId);
             if (!habit) return;
             
-            // Reset streak
-            habit.current_streak_length = 0;
-            habit.is_due_today = false;
+            // Save state for undo
+            saveUndoState();
             
+            // Check grace period
+            const today = toDayKey();
+            const thisWeek = getWeekKey();
+            const weekCompletions = (habit.completions || [])
+                .filter(ts => getWeekKey(new Date(ts)) === thisWeek)
+                .map(ts => toDayKey(new Date(ts)));
+            
+            const scheduledDays = habit.schedule?.daysOfWeek ?? [0,1,2,3,4,5,6];
+            const weekDays = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - date.getDay() + i);
+                if (scheduledDays.includes(date.getDay())) {
+                    weekDays.push(toDayKey(date));
+                }
+            }
+            
+            const misses = weekDays.filter(day => !weekCompletions.includes(day) && day <= today).length;
+            
+            if (misses > habit.grace_per_week) {
+                habit.current_streak_length = 0;
+            }
+            
+            habit.is_due_today = true; // Keep showing as due until midnight
             showNotification('Habit marked as missed. Try again tomorrow! 💪', 'info');
-            
             loadHabits();
         }
 
         function deleteHabit(habitId) {
-            if (confirm('Are you sure you want to delete this habit?')) {
-                habits = habits.filter(h => h.id !== habitId);
-                showNotification('Habit deleted', 'info');
-                loadHabits();
+            const habit = habits.find(h => h.id === habitId);
+            if (!habit) return;
+            
+            if (settings.confirmDestructive && !confirm(`Are you sure you want to delete "${habit.title}"?`)) {
+                return;
+            }
+            
+            // Save state for undo
+            saveUndoState();
+            
+            habits = habits.filter(h => h.id !== habitId);
+            showNotification('Habit deleted', 'info');
+            loadHabits();
+        }
+
+        // Settings modal functions
+        function openSettings(){
+            const m = document.getElementById('settings-modal');
+            document.getElementById('set-theme').value = settings.theme;
+            document.getElementById('set-week').value = String(settings.weekStartsOn);
+            document.getElementById('set-tz').value = settings.timezoneMode;
+            document.getElementById('set-default-goal').value = settings.defaultGoalType;
+            document.getElementById('set-default-target').value = settings.defaultTargetValue;
+            document.getElementById('set-default-hour').value = settings.defaultReminderHour ?? '';
+            document.getElementById('set-notifs').checked = settings.notificationsEnabled;
+            document.getElementById('set-quiet-start').value = settings.quietHours.start;
+            document.getElementById('set-quiet-end').value = settings.quietHours.end;
+            document.getElementById('set-confirm').checked = settings.confirmDestructive;
+            document.getElementById('set-autobackup').checked = settings.autoBackupOnImport;
+            document.getElementById('set-sort').value = settings.sortBy;
+            document.getElementById('set-hide-completed').checked = settings.hideCompletedToday;
+            m.classList.remove('hidden');
+            // Focus first input
+            document.getElementById('set-theme').focus();
+        }
+        
+        function closeSettings(){ 
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+        
+        function saveSettingsFromUI(){
+            settings.theme = document.getElementById('set-theme').value;
+            settings.weekStartsOn = Number(document.getElementById('set-week').value);
+            settings.timezoneMode = document.getElementById('set-tz').value;
+            settings.defaultGoalType = document.getElementById('set-default-goal').value;
+            settings.defaultTargetValue = Number(document.getElementById('set-default-target').value || 1);
+            const h = document.getElementById('set-default-hour').value;
+            settings.defaultReminderHour = h === '' ? null : Number(h);
+            settings.notificationsEnabled = document.getElementById('set-notifs').checked;
+            settings.quietHours.start = Number(document.getElementById('set-quiet-start').value || 22);
+            settings.quietHours.end = Number(document.getElementById('set-quiet-end').value || 7);
+            settings.confirmDestructive = document.getElementById('set-confirm').checked;
+            settings.autoBackupOnImport = document.getElementById('set-autobackup').checked;
+            settings.sortBy = document.getElementById('set-sort').value;
+            settings.hideCompletedToday = document.getElementById('set-hide-completed').checked;
+            saveSettings(); 
+            loadHabits(); 
+            closeSettings();
+        }
+
+        // Sort and filter functions
+        function updateSortAndFilter() {
+            settings.sortBy = document.getElementById('sort-select').value;
+            settings.hideCompletedToday = document.getElementById('hide-completed').checked;
+            saveSettings();
+            loadHabits();
+        }
+
+        // Undo system
+        function saveUndoState() {
+            undoState = JSON.parse(JSON.stringify(habits));
+            showUndoSnackbar();
+        }
+
+        function showUndoSnackbar() {
+            const snackbar = document.getElementById('undo-snackbar');
+            const message = document.getElementById('undo-message');
+            const button = document.getElementById('undo-button');
+            
+            message.textContent = 'Action completed';
+            snackbar.classList.remove('hidden');
+            
+            // Clear existing timeout
+            if (undoTimeout) clearTimeout(undoTimeout);
+            
+            // Set up undo button
+            button.onclick = function() {
+                if (undoState) {
+                    habits = undoState;
+                    loadHabits();
+                    hideUndoSnackbar();
+                }
+            };
+            
+            // Auto-hide after 5 seconds
+            undoTimeout = setTimeout(() => {
+                hideUndoSnackbar();
+            }, 5000);
+        }
+
+        function hideUndoSnackbar() {
+            document.getElementById('undo-snackbar').classList.add('hidden');
+            undoState = null;
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+                undoTimeout = null;
             }
         }
 
         function showCreateForm() {
             document.getElementById('create-modal').classList.remove('hidden');
+            document.getElementById('habit-title').focus();
         }
 
         function hideCreateForm() {
@@ -345,6 +712,7 @@
 
         function showImportModal() {
             document.getElementById('import-modal').classList.remove('hidden');
+            document.getElementById('import-file').focus();
         }
 
         function hideImportModal() {
@@ -370,8 +738,12 @@
                 created_at: new Date().toISOString(),
                 current_streak_length: 0,
                 is_due_today: true,
-                best_hour: 9,
-                completions: []
+                best_hour: settings.defaultReminderHour || 9,
+                completions: [],
+                daily_progress: 0,
+                schedule: { daysOfWeek: [0,1,2,3,4,5,6] },
+                reminder_hour: settings.defaultReminderHour,
+                icon: null
             };
             
             habits.push(newHabit);
@@ -405,15 +777,22 @@
                 return;
             }
             
+            if (settings.autoBackupOnImport) {
+                exportData();
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const importedHabits = JSON.parse(e.target.result);
                     if (Array.isArray(importedHabits)) {
+                        if (settings.confirmDestructive && !confirm('This will replace all your current habits. Continue?')) {
+                            return;
+                        }
                         habits = importedHabits;
                         hideImportModal();
                         showNotification('Data imported successfully! 📥', 'success');
-                        loadHabits();
+        loadHabits();
                     } else {
                         showNotification('Invalid file format', 'error');
                     }
@@ -446,16 +825,33 @@
             }, 3000);
         }
 
-        // Add some keyboard shortcuts
+        // Keyboard shortcuts and accessibility
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 hideCreateForm();
                 hideImportModal();
+                closeSettings();
+                hideUndoSnackbar();
             }
             if (e.ctrlKey && e.key === 'n') {
                 e.preventDefault();
                 showCreateForm();
             }
+            if (e.ctrlKey && e.key === ',') {
+                e.preventDefault();
+                openSettings();
+            }
+        });
+
+        // Initialize sort/filter controls
+        function initializeSortFilter() {
+            document.getElementById('sort-select').value = settings.sortBy;
+            document.getElementById('hide-completed').checked = settings.hideCompletedToday;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSortFilter();
         });
     </script>
 </body>
