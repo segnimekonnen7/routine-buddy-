@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Plus, CheckCircle, Clock, Target } from 'lucide-react'
 
+// API Configuration
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
+
 interface HabitSummary {
   id: string
   title: string
@@ -31,8 +34,8 @@ export default function Dashboard() {
 
   const fetchHabits = async () => {
     try {
-      console.log('Fetching habits from:', 'https://routine-h9ig.onrender.com/habits')
-      const response = await axios.get('https://routine-h9ig.onrender.com/habits')
+      console.log('Fetching habits from:', `${API_BASE}/habits`)
+      const response = await axios.get(`${API_BASE}/habits`)
       console.log('API Response:', response.data)
       setHabits(response.data)
     } catch (err) {
@@ -45,7 +48,7 @@ export default function Dashboard() {
 
   const handleCheckin = async (habitId: string) => {
     try {
-      await axios.post(`https://routine-h9ig.onrender.com/habits/${habitId}/checkin`, {
+      await axios.post(`${API_BASE}/habits/${habitId}/checkin`, {
         ts: new Date().toISOString()
       })
       fetchHabits() // Refresh habits
@@ -56,7 +59,7 @@ export default function Dashboard() {
 
   const handleSnooze = async (habitId: string) => {
     try {
-      await axios.post(`https://routine-h9ig.onrender.com/habits/${habitId}/miss`, {
+      await axios.post(`${API_BASE}/habits/${habitId}/miss`, {
         ts: new Date().toISOString()
       })
       fetchHabits() // Refresh habits

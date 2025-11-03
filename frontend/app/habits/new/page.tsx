@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { ArrowLeft, Save } from 'lucide-react'
 
+// API Configuration
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
+
 export default function NewHabit() {
   const [formData, setFormData] = useState({
     title: '',
@@ -27,7 +30,7 @@ export default function NewHabit() {
     setLoading(true)
 
     try {
-      await axios.post('https://routine-h9ig.onrender.com/habits', {
+      await axios.post(`${API_BASE}/habits`, {
         ...formData,
         target_value: formData.target_value ? parseFloat(formData.target_value) : null,
         schedule_json: schedule
