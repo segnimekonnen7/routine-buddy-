@@ -2,6 +2,8 @@
 
 import logging
 import socket
+import json
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -23,6 +25,63 @@ def find_free_port():
         s.listen(1)
         port = s.getsockname()[1]
     return port
+
+# JSON-based storage
+DB_FILE = "habits_data.json"
+
+def load_habits() -> List[Dict[str, Any]]:
+    """Load habits from JSON file."""
+    if os.path.exists(DB_FILE):
+        try:
+            with open(DB_FILE, 'r') as f:
+                data = json.load(f)
+                return data.get("habits", [])
+        except (json.JSONDecodeError, IOError):
+            logger.warning(f"Could not load {DB_FILE}, starting fresh")
+    return []
+
+def save_habits(habits: List[Dict[str, Any]]):
+    """Save habits to JSON file."""
+    data = {"habits": habits}
+    with open(DB_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+# Load habits on startup
+habits_db = load_habits()
+if not habits_db:
+    # Initialize with demo data
+    habits_db = [
+        {
+            "id": "demo-1",
+            "title": "Drink Water",
+            "notes": "Stay hydrated",
+            "goal_type": "count",
+            "target_value": 8,
+            "grace_per_week": 2,
+            "timezone": "UTC",
+            "created_at": "2024-01-01T00:00:00Z",
+            "current_streak_length": 5,
+            "is_due_today": True,
+            "best_hour": 9,
+            "schedule_json": {"type": "daily", "days": [1, 2, 3, 4, 5, 6, 7]}
+        },
+        {
+            "id": "demo-2", 
+            "title": "Exercise",
+            "notes": "30 minutes daily",
+            "goal_type": "duration",
+            "target_value": 30,
+            "grace_per_week": 1,
+            "timezone": "UTC",
+            "created_at": "2024-01-01T00:00:00Z",
+            "current_streak_length": 3,
+            "is_due_today": False,
+            "best_hour": 7,
+            "schedule_json": {"type": "daily", "days": [1, 2, 3, 4, 5, 6, 7]}
+        }
+    ]
+    save_habits(habits_db)
+    logger.info("Initialized with demo data")
 
 # Create FastAPI app
 app = FastAPI(
@@ -62,36 +121,7 @@ class HabitResponse(BaseModel):
     current_streak_length: int
     is_due_today: bool
     best_hour: Optional[int]
-
-# In-memory storage for demo
-habits_db = [
-    {
-        "id": "demo-1",
-        "title": "Drink Water",
-        "notes": "Stay hydrated",
-        "goal_type": "count",
-        "target_value": 8,
-        "grace_per_week": 2,
-        "timezone": "UTC",
-        "created_at": "2024-01-01T00:00:00Z",
-        "current_streak_length": 5,
-        "is_due_today": True,
-        "best_hour": 9
-    },
-    {
-        "id": "demo-2", 
-        "title": "Exercise",
-        "notes": "30 minutes daily",
-        "goal_type": "duration",
-        "target_value": 30,
-        "grace_per_week": 1,
-        "timezone": "UTC",
-        "created_at": "2024-01-01T00:00:00Z",
-        "current_streak_length": 3,
-        "is_due_today": False,
-        "best_hour": 7
-    }
-]
+    schedule_json: Optional[Dict[str, Any]] = None
 
 @app.get("/health")
 async def health_check():
@@ -122,10 +152,12 @@ async def create_habit(habit: HabitCreate):
         "created_at": datetime.now().isoformat() + "Z",
         "current_streak_length": 0,
         "is_due_today": True,  # New habits are due today
-        "best_hour": None
+        "best_hour": None,
+        "schedule_json": habit.schedule_json
     }
     
     habits_db.append(new_habit)
+    save_habits(habits_db)
     logger.info(f"Created new habit: {new_habit['title']}")
     
     return new_habit
@@ -141,6 +173,7 @@ async def checkin_habit(habit_id: str):
     # Update streak
     habit["current_streak_length"] += 1
     habit["is_due_today"] = False  # Mark as completed for today
+    save_habits(habits_db)
     
     logger.info(f"Habit {habit_id} checked in successfully")
     return {"message": f"Habit {habit_id} checked in successfully", "streak": habit["current_streak_length"]}
@@ -158,6 +191,7 @@ async def miss_habit(habit_id: str):
         habit["current_streak_length"] = 0
     
     habit["is_due_today"] = False  # Mark as missed for today
+    save_habits(habits_db)
     
     logger.info(f"Habit {habit_id} marked as missed")
     return {"message": f"Habit {habit_id} marked as missed", "streak": habit["current_streak_length"]}

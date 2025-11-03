@@ -1,0 +1,79 @@
+{
+  "habits": [
+    {
+      "id": "demo-1",
+      "title": "Drink Water",
+      "notes": "Stay hydrated",
+      "goal_type": "count",
+      "target_value": 8,
+      "grace_per_week": 2,
+      "timezone": "UTC",
+      "created_at": "2024-01-01T00:00:00Z",
+      "current_streak_length": 5,
+      "is_due_today": true,
+      "best_hour": 9,
+      "schedule_json": {
+        "type": "daily",
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      }
+    },
+    {
+      "id": "demo-2",
+      "title": "Exercise",
+      "notes": "30 minutes daily",
+      "goal_type": "duration",
+      "target_value": 30,
+      "grace_per_week": 1,
+      "timezone": "UTC",
+      "created_at": "2024-01-01T00:00:00Z",
+      "current_streak_length": 3,
+      "is_due_today": false,
+      "best_hour": 7,
+      "schedule_json": {
+        "type": "daily",
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      }
+    },
+    {
+      "id": "225fa868-bcf0-4f77-976f-1171b874f51b",
+      "title": "Read Daily",
+      "notes": null,
+      "goal_type": "check",
+      "target_value": null,
+      "grace_per_week": 1,
+      "timezone": "UTC",
+      "created_at": "2025-11-02T19:12:15.635204Z",
+      "current_streak_length": 0,
+      "is_due_today": true,
+      "best_hour": null,
+      "schedule_json": {
+        "type": "daily",
+        "days": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      }
+    }
+  ]
+}
