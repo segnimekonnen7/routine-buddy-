@@ -53,6 +53,7 @@ build/
 *.db
 *.sqlite
 *.sqlite3
+habits_data.json
 
 # IDE
 .vscode/
